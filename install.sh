@@ -6,6 +6,15 @@ CONFIG_DIR="/etc/ngrok-run"
 SOURCE_DIR="$(pwd)"
 
 add_profile_to_bashrc() {
+    if [ ! -f ~/.profile.sh ]; then
+        echo "~/.profile.sh does not exist. Creating it..."
+        touch ~/.profile.sh
+        echo "#!/bin/bash" > ~/.profile.sh
+        echo "~/.profile.sh has been created."
+    else
+        echo "~/.profile.sh already exists."
+    fi
+
     if ! grep -Fxq "source ~/.profile.sh" ~/.bashrc; then
         echo "Adding source ~/.profile.sh to ~/.bashrc"
         echo "source ~/.profile.sh" >> ~/.bashrc
@@ -108,8 +117,6 @@ copy_files_to_config_dir() {
 }
 
 # setup
-source ~/.profile.sh
-
 add_profile_to_bashrc
 
 set_ngrok_token
