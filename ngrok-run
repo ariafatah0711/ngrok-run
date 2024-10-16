@@ -49,7 +49,7 @@ case "$1" in
             all)
                 start_ngrok "all"
                 ;;
-            )
+            -h)
                 echo "Usage: $0 start {ssh|http|all}"
                 ;;
         esac
