@@ -42,14 +42,15 @@ list_tunnels() {
 case "$1" in
     start)
         case "$2" in
-            ssh|http|http-8081)
+            *)
+                echo "Usage: $0 start {ssh|http|all}"
                 start_ngrok "$2"
                 ;;
             all)
                 start_ngrok "all"
                 ;;
-            *)
-                echo "Usage: $0 start {ssh|http|http-8081|all}"
+            )
+                echo "Usage: $0 start {ssh|http|all}"
                 ;;
         esac
         ;;
