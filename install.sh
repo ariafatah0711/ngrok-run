@@ -92,6 +92,11 @@ tunnels:
 EOL
 fi
 
+if [ "$EUID" -ne 0 ]; then
+    echo "This script must be run as root. Please use sudo or log in as root."
+    exit 1
+fi
+
 set_ngrok_token
 set_ngrok_hostname
 install_script
