@@ -1,19 +1,30 @@
 #!/bin/bash
 
-# config
+# Config
 CONFIG_PATH="/etc/ngrok-run/config.yaml"
 
+# Fungsi untuk memulai Ngrok dengan tunnel tertentu
 start_ngrok() {
-    echo "Starting Ngrok..."
-    ngrok start --config "$CONFIG_PATH" --all 1>/dev/null &
+    local tunnel="$1"
+
+    if [[ "$tunnel" == "all" ]]; then
+        echo "Starting all Ngrok tunnels..."
+        ngrok start --config "$CONFIG_PATH" --all 1>/dev/null &
+    else
+        echo "Starting Ngrok tunnel: $tunnel..."
+        ngrok start --config "$CONFIG_PATH" "$tunnel" 1>/dev/null &
+    fi
+
     list_tunnels
 }
 
+# Fungsi untuk menghentikan Ngrok
 stop_ngrok() {
     echo "Stopping Ngrok..."
     pkill ngrok
 }
 
+# Fungsi untuk menampilkan semua tunnel yang sedang berjalan
 list_tunnels() {
     curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[] | {url: .public_url, addr: .config.addr, proto: .proto} | @base64' | sort -t: -k3,3 | while read line; do
         _jq() {
@@ -27,9 +38,20 @@ list_tunnels() {
     done
 }
 
+# Main case statement untuk mengelola perintah
 case "$1" in
     start)
-        start_ngrok
+        case "$2" in
+            ssh|http|http-8081)
+                start_ngrok "$2"
+                ;;
+            all)
+                start_ngrok "all"
+                ;;
+            *)
+                echo "Usage: $0 start {ssh|http|http-8081|all}"
+                ;;
+        esac
         ;;
     stop)
         stop_ngrok

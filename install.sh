@@ -84,10 +84,6 @@ tunnels:
     proto: http
     addr: 80
     hostname: ""
-  http-8081:
-    proto: http
-    addr: 8081
-    hostname: ""
 EOL
 fi
 
