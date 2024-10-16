@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# config
+CONFIG_PATH="/usr/local/bin/ngrok-run/aria.yaml"
+
+start_ngrok() {
+    echo "Starting Ngrok..."
+    ngrok start --config "$CONFIG_PATH" --all &>/dev/null &
+    list_tunnels
+}
+
+stop_ngrok() {
+    echo "Stopping Ngrok..."
+    pkill ngrok
+}
+
+list_tunnels() {
+    curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[] | {url: .public_url, addr: .config.addr, proto: .proto} | @base64' | sort -t: -k3,3 | while read line; do
+        _jq() {
+            echo "${line}" | base64 --decode | jq -r "${1}"
+        }
+        if [[ $(_jq '.proto') == "tcp" ]]; then
+            echo "TCP URL: $(_jq '.url') --> Forwarding to: $(_jq '.addr')"
+        else
+            echo "HTTP URL: $(_jq '.url') --> Forwarding to: $(_jq '.addr')"
+        fi
+    done
+}
+
+case "$1" in
+    start)
+        start_ngrok
+        ;;
+    stop)
+        stop_ngrok
+        ;;
+    list)
+        list_tunnels
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|list}"
+        ;;
+esac

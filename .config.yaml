@@ -1,0 +1,16 @@
+version: "3"
+agent:
+  authtoken: ${ur_token}
+tunnels:
+  ssh:
+    proto: tcp
+    addr: 22
+    hostname: ${NGROK_HOSTNAME}
+  http:
+    proto: http
+    addr: 80
+    hostname: ${NGROK_HOSTNAME}
+  http-8081:
+    proto: http
+    addr: 8081
+    hostname: ${NGROK_HOSTNAME}
