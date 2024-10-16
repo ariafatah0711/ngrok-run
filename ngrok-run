@@ -5,7 +5,7 @@ CONFIG_PATH="/etc/ngrok-run/config.yaml"
 
 start_ngrok() {
     echo "Starting Ngrok..."
-    ngrok start --config "$CONFIG_PATH" --all &>/dev/null &
+    ngrok start --config "$CONFIG_PATH" --all 1>/dev/null &
     list_tunnels
 }
 
