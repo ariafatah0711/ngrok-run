@@ -20,6 +20,23 @@ set_ngrok_token() {
         echo "Ngrok Authtoken has been set and added to ~/.bashrc"
     else
         echo "Ngrok Authtoken is already set: $NGROK_AUTHTOKEN"
+        echo "Do you want to change the Authtoken? (y/n):"
+        read -r change_token
+
+        if [[ "$change_token" == "y" ]]; then
+            echo "Please enter your new Ngrok Authtoken:"
+            read -r new_token
+
+            if [ -z "$new_token" ]; then
+                echo "No Authtoken provided. Keeping the old Authtoken: $NGROK_AUTHTOKEN"
+            else
+                sed -i "/export NGROK_AUTHTOKEN=/c\export NGROK_AUTHTOKEN=\"$new_token\"" ~/.bashrc
+                export NGROK_AUTHTOKEN="$new_token"
+                echo "Ngrok Authtoken has been updated to: $NGROK_AUTHTOKEN"
+            fi
+        else
+            echo "Keeping the existing Authtoken: $NGROK_AUTHTOKEN"
+        fi
     fi
 }
 
@@ -38,6 +55,23 @@ set_ngrok_hostname() {
         echo "Ngrok hostname has been set and added to ~/.bashrc"
     else
         echo "Ngrok hostname is already set: $NGROK_HOSTNAME"
+        echo "Do you want to change the hostname? (y/n):"
+        read -r change_hostname
+
+        if [[ "$change_hostname" == "y" ]]; then
+            echo "Please enter your new Ngrok hostname:"
+            read -r new_hostname
+
+            if [ -z "$new_hostname" ]; then
+                echo "No hostname provided. Keeping the old hostname: $NGROK_HOSTNAME"
+            else
+                sed -i "/export NGROK_HOSTNAME=/c\export NGROK_HOSTNAME=\"$new_hostname\"" ~/.bashrc
+                export NGROK_HOSTNAME="$new_hostname"
+                echo "Ngrok hostname has been updated to: $NGROK_HOSTNAME"
+            fi
+        else
+            echo "Keeping the existing hostname: $NGROK_HOSTNAME"
+        fi
     fi
 }
 
@@ -72,9 +106,8 @@ copy_files_to_config_dir() {
 # setup
 set_ngrok_token
 set_ngrok_hostname
-update_bashrc
-
 install_script
 copy_files_to_config_dir
+update_bashrc
 
 echo "Setup completed successfully!"
