@@ -5,11 +5,6 @@ TARGET_PATH="/usr/local/bin"
 CONFIG_DIR="/etc/ngrok-run"
 SOURCE_DIR="$(pwd)"
 
-update_bashrc() {
-    echo "Updating ~/.bashrc..."
-    source ~/.bashrc
-}
-
 set_ngrok_token() {
     if [ -z "$NGROK_AUTHTOKEN" ]; then
         echo "Please enter your Ngrok Authtoken:"
@@ -108,6 +103,7 @@ set_ngrok_token
 set_ngrok_hostname
 install_script
 copy_files_to_config_dir
-update_bashrc
 
 echo "Setup completed successfully!"
+sleep 2
+source ~/.bashrc
