@@ -3,7 +3,12 @@
 SCRIPT_NAME="ngrok-run"
 TARGET_PATH="/usr/local/bin"
 CONFIG_DIR="/etc/ngrok-run"
-SOURCE_DIR="$(pwd)"  # Direktori saat ini tempat skrip berada
+SOURCE_DIR="$(pwd)"
+
+update_bashrc() {
+    echo "Updating ~/.bashrc..."
+    source ~/.bashrc
+}
 
 set_ngrok_token() {
     if [ -z "$NGROK_AUTHTOKEN" ]; then
@@ -14,7 +19,7 @@ set_ngrok_token() {
         export NGROK_AUTHTOKEN="$NGROK_AUTHTOKEN"
         echo "Ngrok Authtoken has been set and added to ~/.bashrc"
     else
-        echo "Ngrok Authtoken is already set."
+        echo "Ngrok Authtoken is already set: $NGROK_AUTHTOKEN"
     fi
 }
 
@@ -32,7 +37,7 @@ set_ngrok_hostname() {
         export NGROK_HOSTNAME="$NGROK_HOSTNAME"
         echo "Ngrok hostname has been set and added to ~/.bashrc"
     else
-        echo "Ngrok hostname is already set."
+        echo "Ngrok hostname is already set: $NGROK_HOSTNAME"
     fi
 }
 
@@ -54,20 +59,22 @@ install_script() {
 copy_files_to_config_dir() {
     echo "Copying files to $CONFIG_DIR..."
 
-    # Buat direktori /etc/ngrok-run jika belum ada
     if [ ! -d "$CONFIG_DIR" ]; then
         echo "Creating $CONFIG_DIR..."
         sudo mkdir -p "$CONFIG_DIR"
     fi
 
-    # Salin semua file dari folder saat ini ke /etc/ngrok-run
     sudo cp -r "$SOURCE_DIR"/* "$CONFIG_DIR/"
 
     echo "All files have been copied to $CONFIG_DIR."
 }
 
-# Panggil fungsi-fungsi di dalam skrip
+# setup
 set_ngrok_token
 set_ngrok_hostname
+update_bashrc
+
 install_script
 copy_files_to_config_dir
+
+echo "Setup completed successfully!"
