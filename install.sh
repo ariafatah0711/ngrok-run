@@ -80,7 +80,6 @@ tunnels:
   ssh:
     proto: tcp
     addr: 22
-    hostname: ""
   http:
     proto: http
     addr: 80
