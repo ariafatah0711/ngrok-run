@@ -10,8 +10,8 @@ add_profile_to_bashrc() {
         echo "~/.profile.sh does not exist. Creating it..."
         touch ~/.profile.sh
         echo "#!/bin/bash" > ~/.profile.sh
-        echo "NGROK_AUTHTOKEN='<token>'" >> ~/.profile.sh
-        echo "NGROK_HOSTNAME='<domain>'" >> ~/.profile.sh
+        echo "export NGROK_AUTHTOKEN='<token>'" >> ~/.profile.sh
+        echo "export NGROK_HOSTNAME='<domain>'" >> ~/.profile.sh
         echo "~/.profile.sh has been created."
     else
         echo "~/.profile.sh already exists."
