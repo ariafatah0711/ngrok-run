@@ -90,7 +90,6 @@ list_tunnels() {
                 else
                     echo "HTTP URL: $(_jq '.url') --> Forwarding to: $(_jq '.addr')"
                 fi
-            echo -e "\n"
             done
         else
             echo "No tunnels found on port $port."
