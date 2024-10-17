@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# Config
+CONFIG_PATH="/etc/ngrok-run/config.yaml"
+
+# Fungsi untuk memulai Ngrok dengan tunnel tertentu
+start_ngrok() {
+    local tunnel="$1"
+
+    if [[ "$tunnel" == "all" ]]; then
+        echo "Starting all Ngrok tunnels..."
+        ngrok start --config "$CONFIG_PATH" --all 1>/dev/null &
+    else
+        echo "Starting Ngrok tunnel: $tunnel..."
+        ngrok start --config "$CONFIG_PATH" "$tunnel" 1>/dev/null &
+    fi
+
+    list_tunnels
+}
+
+# Fungsi untuk menghentikan Ngrok
+stop_ngrok() {
+    echo "Stopping Ngrok..."
+    pkill ngrok
+}
+
+# Fungsi untuk menampilkan semua tunnel yang sedang berjalan
+list_tunnels() {
+    curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[] | {url: .public_url, addr: .config.addr, proto: .proto} | @base64' | sort -t: -k3,3 | while read line; do
+        _jq() {
+            echo "${line}" | base64 --decode | jq -r "${1}"
+        }
+        if [[ $(_jq '.proto') == "tcp" ]]; then
+            echo "TCP URL: $(_jq '.url') --> Forwarding to: $(_jq '.addr')"
+        else
+            echo "HTTP URL: $(_jq '.url') --> Forwarding to: $(_jq '.addr')"
+        fi
+    done
+}
+
+# Main case statement untuk mengelola perintah
+case "$1" in
+    start)
+        case "$2" in
+            *)
+                echo "Usage: $0 start {ssh|http|all}"
+                start_ngrok "$2"
+                ;;
+            all)
+                start_ngrok "all"
+                ;;
+            -h)
+                echo "Usage: $0 start {ssh|http|all}"
+                ;;
+        esac
+        ;;
+    stop)
+        stop_ngrok
+        ;;
+    list)
+        list_tunnels
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|list}"
+        ;;
+esac

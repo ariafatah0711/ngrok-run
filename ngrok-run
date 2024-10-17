@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# Config
-CONFIG_PATH="/etc/ngrok-run/config.yaml"
+# Daftar tunnel dengan path ke file config masing-masing
+declare -A TUNNELS
+TUNNELS["tun-1"]="/etc/config.yaml"
+TUNNELS["tun-2"]="/home/aria/config.yaml"
+TUNNELS["tun-3"]="/etc/ngrok-run/config3.yaml"
 
 # Fungsi untuk memulai Ngrok dengan tunnel tertentu
 start_ngrok() {
@@ -9,10 +12,18 @@ start_ngrok() {
 
     if [[ "$tunnel" == "all" ]]; then
         echo "Starting all Ngrok tunnels..."
-        ngrok start --config "$CONFIG_PATH" --all 1>/dev/null &
-    else
+        local i=4040
+        for key in "${!TUNNELS[@]}"; do
+            echo "Starting tunnel: $key on Web Interface Port: $i"
+            ngrok start --config "${TUNNELS[$key]}" --all --log "stdout" --log-format "term" --log-level "info" 1>/dev/null &
+            ((i++))  # Increment port for next tunnel
+        done
+    elif [[ -n "${TUNNELS[$tunnel]}" ]]; then
         echo "Starting Ngrok tunnel: $tunnel..."
-        ngrok start --config "$CONFIG_PATH" "$tunnel" 1>/dev/null &
+        ngrok start --config "${TUNNELS[$tunnel]}" --all --log "stdout" --log-format "term" --log-level "info" 1>/dev/null &
+    else
+        echo "Error: Tunnel '$tunnel' not found."
+        exit 1
     fi
 
     list_tunnels
@@ -26,15 +37,25 @@ stop_ngrok() {
 
 # Fungsi untuk menampilkan semua tunnel yang sedang berjalan
 list_tunnels() {
-    curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[] | {url: .public_url, addr: .config.addr, proto: .proto} | @base64' | sort -t: -k3,3 | while read line; do
-        _jq() {
-            echo "${line}" | base64 --decode | jq -r "${1}"
-        }
-        if [[ $(_jq '.proto') == "tcp" ]]; then
-            echo "TCP URL: $(_jq '.url') --> Forwarding to: $(_jq '.addr')"
+    local port=4040
+    for key in "${!TUNNELS[@]}"; do
+        echo "Fetching tunnels from Web Interface on port $port..."
+        response=$(curl -s http://localhost:$port/api/tunnels)
+        if [[ $? -eq 0 ]]; then
+            echo "$response" | jq -r '.tunnels[] | {url: .public_url, addr: .config.addr, proto: .proto} | @base64' | while read line; do
+                _jq() {
+                    echo "${line}" | base64 --decode | jq -r "${1}"
+                }
+                if [[ $(_jq '.proto') == "tcp" ]]; then
+                    echo "TCP URL: $(_jq '.url') --> Forwarding to: $(_jq '.addr')"
+                else
+                    echo "HTTP URL: $(_jq '.url') --> Forwarding to: $(_jq '.addr')"
+                fi
+            done
         else
-            echo "HTTP URL: $(_jq '.url') --> Forwarding to: $(_jq '.addr')"
+            echo "No tunnels found on port $port."
         fi
+        ((port++))  # Increment port for next tunnel
     done
 }
 
@@ -42,15 +63,16 @@ list_tunnels() {
 case "$1" in
     start)
         case "$2" in
-            *)
-                echo "Usage: $0 start {ssh|http|all}"
-                start_ngrok "$2"
-                ;;
             all)
                 start_ngrok "all"
                 ;;
-            -h)
-                echo "Usage: $0 start {ssh|http|all}"
+            *)
+                if [[ -z "$2" ]]; then
+                    echo "Starting all tunnels by default..."
+                    start_ngrok "all"
+                else
+                    start_ngrok "$2"
+                fi
                 ;;
         esac
         ;;
@@ -61,6 +83,6 @@ case "$1" in
         list_tunnels
         ;;
     *)
-        echo "Usage: $0 {start|stop|list}"
+        echo "Usage: $0 {start|stop|list} [tun-1|tun-2|all]"
         ;;
 esac
