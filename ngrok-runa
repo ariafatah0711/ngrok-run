@@ -30,25 +30,8 @@ start_ngrok() {
 
 # Fungsi untuk menghentikan Ngrok
 stop_ngrok() {
-    local tunnel="$1"
-
-    if [[ "$tunnel" == "all" ]]; then
-        echo "Stopping all Ngrok tunnels..."
-        pkill ngrok
-    elif [[ -n "${TUNNELS[$tunnel]}" ]]; then
-        echo "Stopping Ngrok tunnel: $tunnel..."
-        # Dapatkan PID dari proses ngrok yang menjalankan config spesifik
-        pid=$(ps aux | grep "ngrok start --config ${TUNNELS[$tunnel]}" | grep -v grep | awk '{print $2}')
-        if [[ -n "$pid" ]]; then
-            kill "$pid"
-            echo "Tunnel $tunnel has been stopped."
-        else
-            echo "No running process found for tunnel: $tunnel"
-        fi
-    else
-        echo "Error: Tunnel '$tunnel' not found."
-        exit 1
-    fi
+    echo "Stopping Ngrok..."
+    pkill ngrok
 }
 
 # Fungsi untuk menampilkan semua tunnel yang sedang berjalan
@@ -93,19 +76,7 @@ case "$1" in
         esac
         ;;
     stop)
-        case "$2" in
-            all)
-                stop_ngrok "all"
-                ;;
-            *)
-                if [[ -z "$2" ]]; then
-                    echo "Please specify a tunnel to stop or 'all'."
-                    exit 1
-                else
-                    stop_ngrok "$2"
-                fi
-                ;;
-        esac
+        stop_ngrok
         ;;
     list)
         list_tunnels
