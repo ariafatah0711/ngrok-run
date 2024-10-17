@@ -6,6 +6,11 @@ TUNNELS["tun-1"]="/etc/ngrok-run/config.yaml"
 TUNNELS["tun-2"]="/home/ariafatah/config-1.yaml"
 TUNNELS["tun-3"]="/home/ariafatah/config-2.yaml"
 
+PID_DIR="/tmp/ngrok-run-pids"  # Direktori untuk menyimpan PID file
+
+# Buat direktori untuk menyimpan PID file
+mkdir -p "$PID_DIR"
+
 start_ngrok() {
     local tunnel="$1"
 
@@ -15,11 +20,20 @@ start_ngrok() {
         for key in "${!TUNNELS[@]}"; do
             echo "Starting tunnel: $key on Web Interface Port: $i"
             ngrok start --config "${TUNNELS[$key]}" --all --log "stdout" --log-format "term" --log-level "info" 1>/dev/null &
+
+            # Simpan PID dari proses yang baru saja dijalankan
+            local ngrok_pid=$!
+            echo "$ngrok_pid #$key" > "$PID_DIR/$key.pid"
+
             ((i++))  # Increment port for next tunnel
         done
     elif [[ -n "${TUNNELS[$tunnel]}" ]]; then
         echo "Starting Ngrok tunnel: $tunnel..."
         ngrok start --config "${TUNNELS[$tunnel]}" --all --log "stdout" --log-format "term" --log-level "info" 1>/dev/null &
+
+        # Simpan PID dari proses yang baru saja dijalankan
+        local ngrok_pid=$!
+        echo "$ngrok_pid #$tunnel" > "$PID_DIR/$tunnel.pid"
     else
         echo "Error: Tunnel '$tunnel' not found."
         exit 1
@@ -35,15 +49,24 @@ stop_ngrok() {
     if [[ "$tunnel" == "all" ]]; then
         echo "Stopping all Ngrok tunnels..."
         pkill ngrok
+        rm -f "$PID_DIR"/*.pid  # Hapus semua file .pid setelah stop all
     elif [[ -n "${TUNNELS[$tunnel]}" ]]; then
         echo "Stopping Ngrok tunnel: $tunnel..."
-        # Dapatkan PID dari proses ngrok yang menjalankan config spesifik
-        pid=$(ps aux | grep "ngrok start --config ${TUNNELS[$tunnel]}" | grep -v grep | awk '{print $2}')
-        if [[ -n "$pid" ]]; then
-            kill "$pid"
-            echo "Tunnel $tunnel has been stopped."
+        
+        # Baca PID dari file .pid
+        if [[ -f "$PID_DIR/$tunnel.pid" ]]; then
+            local pid=$(awk '{print $1}' "$PID_DIR/$tunnel.pid")
+
+            # Verifikasi apakah proses dengan PID tersebut memang untuk tunnel ini
+            if ps -p "$pid" | grep -q "#$tunnel"; then
+                kill "$pid"
+                echo "Tunnel $tunnel has been stopped."
+                rm -f "$PID_DIR/$tunnel.pid"  # Hapus file .pid setelah proses dimatikan
+            else
+                echo "No running process found for tunnel: $tunnel"
+            fi
         else
-            echo "No running process found for tunnel: $tunnel"
+            echo "PID file for tunnel $tunnel not found."
         fi
     else
         echo "Error: Tunnel '$tunnel' not found."
