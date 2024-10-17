@@ -90,11 +90,11 @@ list_tunnels() {
                 else
                     echo "HTTP URL: $(_jq '.url') --> Forwarding to: $(_jq '.addr')"
                 fi
+            echo -e "\n"
             done
         else
             echo "No tunnels found on port $port."
         fi
-        echo -e "\n"  # Menambahkan spasi antara setiap port
         ((port++))  # Increment port for next tunnel
     done
 }
@@ -117,19 +117,19 @@ case "$1" in
         esac
         ;;
     stop)
-        case "$2" in
-            all)
-                stop_ngrok "all"
-                ;;
-            *)
-                if [[ -z "$2" ]]; then
-                    echo "Please specify a tunnel to stop or 'all'."
-                    exit 1
-                else
+        if [[ -z "$2" ]]; then
+            echo "No specific tunnel provided. Stopping all tunnels by default..."
+            stop_ngrok "all"
+        else
+            case "$2" in
+                all)
+                    stop_ngrok "all"
+                    ;;
+                *)
                     stop_ngrok "$2"
-                fi
-                ;;
-        esac
+                    ;;
+            esac
+        fi
         ;;
     list)
         list_tunnels
