@@ -78,7 +78,7 @@ stop_ngrok() {
 list_tunnels() {
     local port=4040
     for key in "${!TUNNELS[@]}"; do
-        echo -e "Fetching tunnels from Web Interface on port $port...\n"
+        echo -e "Fetching tunnels from Web Interface on port $port..."
         response=$(curl -s http://localhost:$port/api/tunnels)
         if [[ $? -eq 0 ]]; then
             echo "$response" | jq -r '.tunnels[] | {url: .public_url, addr: .config.addr, proto: .proto} | @base64' | while read line; do
