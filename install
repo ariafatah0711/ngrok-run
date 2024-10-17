@@ -1,0 +1,116 @@
+#!/bin/bash
+
+SCRIPT_NAME="ngrok-run"
+TARGET_PATH="/usr/local/bin"
+CONFIG_DIR="/etc/ngrok-run"
+CONFIG_FILE="$CONFIG_DIR/config.yaml"
+SOURCE_DIR="$(pwd)"
+TEMPLATE_FILE="./template-config.yaml"
+
+# Fungsi untuk menambahkan atau memperbarui authtoken di config.yaml
+set_ngrok_token() {
+    echo "Please enter your Ngrok Authtoken:"
+    read -r NGROK_AUTHTOKEN
+
+    if [ -z "$NGROK_AUTHTOKEN" ]; then
+        echo "No Authtoken provided. Exiting."
+        exit 1
+    fi
+
+    # Update authtoken di config.yaml
+    sed -i "s/\(authtoken:\s*\).*/\1${NGROK_AUTHTOKEN}/" "$CONFIG_FILE"
+    echo "Ngrok Authtoken has been set to: $NGROK_AUTHTOKEN"
+}
+
+# Fungsi untuk mengubah hostname di config.yaml
+set_ngrok_hostname() {
+    echo "Please enter your Ngrok hostname (or leave blank to skip):"
+    read -r NGROK_HOSTNAME
+
+    if [ -n "$NGROK_HOSTNAME" ]; then
+        # Update hostname di semua entri tunnel di config.yaml
+        sed -i "s/\(hostname: \).*/\1$NGROK_HOSTNAME/" "$CONFIG_FILE"
+        echo "Updated hostname for all tunnels to: $NGROK_HOSTNAME"
+    else
+        echo "No hostname provided. Skipping hostname update."
+    fi
+}
+
+# Fungsi untuk menyalin skrip ke /usr/local/bin
+install_script() {
+    echo "Installing $SCRIPT_NAME to $TARGET_PATH..."
+
+    if [ -f "$TARGET_PATH/$SCRIPT_NAME" ]; then
+        echo "$SCRIPT_NAME already exists at $TARGET_PATH, replacing it."
+        sudo rm "$TARGET_PATH/$SCRIPT_NAME"
+    fi
+
+    sudo cp "$SCRIPT_NAME" "$TARGET_PATH/$SCRIPT_NAME"
+    sudo chmod +x "$TARGET_PATH/$SCRIPT_NAME"
+
+    echo "$SCRIPT_NAME has been installed and is now executable globally."
+}
+
+# Fungsi untuk menyalin template config.yaml
+copy_template_config() {
+    echo "Copying template config.yaml to $CONFIG_FILE..."
+
+    if [ ! -d "$CONFIG_DIR" ]; then
+        echo "Creating $CONFIG_DIR..."
+        sudo mkdir -p "$CONFIG_DIR"
+    fi
+
+    if [ -f "$TEMPLATE_FILE" ]; then
+        sudo cp "$TEMPLATE_FILE" "$CONFIG_FILE"
+        echo "Config file has been created from template."
+    else
+        echo "Error: Template file $TEMPLATE_FILE not found."
+        exit 1
+    fi
+}
+
+# Fungsi untuk menyalin file ke direktori konfigurasi
+copy_files_to_config_dir() {
+    echo "Copying files to $CONFIG_DIR..."
+
+    if [ ! -d "$CONFIG_DIR" ]; then
+        echo "Creating $CONFIG_DIR..."
+        sudo mkdir -p "$CONFIG_DIR"
+    fi
+
+    sudo cp -r "$SOURCE_DIR"/* "$CONFIG_DIR/"
+
+    echo "All files have been copied to $CONFIG_DIR."
+}
+
+# Main function for handling "install" or "setup"
+main() {
+    case "$1" in
+        install)
+            install_script
+            copy_files_to_config_dir
+            ;;
+        setup)
+            if [ ! -f "$CONFIG_FILE" ]; then
+                copy_template_config
+            fi
+            set_ngrok_token
+            set_ngrok_hostname
+            ;;
+        *)
+            echo "Usage: $0 {install|setup}"
+            exit 1
+            ;;
+    esac
+}
+
+# Pastikan skrip dijalankan dengan sudo atau root
+if [ "$EUID" -ne 0 ]; then
+    echo "This script must be run as root. Please use sudo or log in as root."
+    exit 1
+fi
+
+# Jalankan main function dengan argumen yang diberikan
+main "$1"
+
+echo "Operation completed successfully!"

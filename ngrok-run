@@ -2,9 +2,9 @@
 
 # Daftar tunnel dengan path ke file config masing-masing
 declare -A TUNNELS
-TUNNELS["tun-1"]="/etc/config.yaml"
-TUNNELS["tun-2"]="/home/aria/config.yaml"
-TUNNELS["tun-3"]="/etc/ngrok-run/config3.yaml"
+TUNNELS["tun-1"]="/etc/ngrok-run/config.yaml"
+TUNNELS["tun-2"]="/home/ariafatah/config.yaml"
+# TUNNELS["tun-3"]="/etc/ngrok-run/config3.yaml"
 
 # Fungsi untuk memulai Ngrok dengan tunnel tertentu
 start_ngrok() {
