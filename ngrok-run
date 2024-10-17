@@ -39,7 +39,7 @@ start_ngrok() {
         exit 1
     fi
 
-    list_tunnels
+    # list_tunnels
 }
 
 # Fungsi untuk menghentikan Ngrok
