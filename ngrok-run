@@ -94,6 +94,7 @@ list_tunnels() {
         else
             echo "No tunnels found on port $port."
         fi
+        echo
         ((port++))  # Increment port for next tunnel
     done
 }
